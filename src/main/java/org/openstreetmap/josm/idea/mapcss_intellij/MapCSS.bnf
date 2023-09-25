@@ -1,0 +1,138 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+{
+  parserClass="org.openstreetmap.josm.idea.mapcss_intellij.parser.MapCSSParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="MapCSS"
+  psiImplClassSuffix="Impl"
+  psiPackage="org.openstreetmap.josm.idea.mapcss_intellij.psi"
+  psiImplPackage="org.openstreetmap.josm.idea.mapcss_intellij.psi.impl"
+
+  elementTypeHolderClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.SimpleTypes"
+  elementTypeClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.SimpleElementType"
+  tokenTypeClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.SimpleTokenType"
+  tokens=[
+    PP_AND="and"
+    PP_OR="or"
+    PP_NOT="not"
+    PP_SUPPORTS="@supports"
+    PP_NEWLINECHAR="regexp:[\n\r\f]"
+    PP_WHITESPACE="regexp:[ \t]"
+    PP_COMMENT_START="/*"
+    PP_COMMENT_END="*/"
+    SET="set"
+    IDENT="regexp:[a-zA-Z_](a-zA-Z_-0-9)*"
+    UINT="regexp:\d+"
+    STRING="regexp:\"([ !#-,-~\u0080-\uFFFF]|\\\"|\\\\)*\""
+    PREDEFINED="\\[dDsSwWbBAGZz]"
+    //REGEX_CHAR_WITHOUT_STAR="regexp:[ -)+-.,0-[]-~\u0080-\uFFFF]|\\/|\\\\|\\[|\\]|\\+|\\.|\\'|\\\"|\\(|\\)|\\{|\\}|\\?|\\*|\\^|\\$|\\|\\p|PREDEFINED" // FIXME
+    //REGEX="regexp:/" REGEX_CHAR_WITHOUT_STAR "(" REGEX_CHAR_WITHOUT_START "|*)*/" // FIXME
+    LBRACE="{"
+    RBRACE="}"
+    LPAR="("
+    RPAR=")"
+    COMMA=","
+    COLOR=":"
+    UFLOAT="regexp:(\d)+(.\d+)?"
+    HEXCOLOR="regexp:#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})"
+    S="regexp:[ \t\n\r\f]+"
+    STAR="*"
+    SLASH="/"
+    LSQUARE="["
+    RSQUARE="]"
+    GREATER_EQUAL=">="
+    LESS_EQUAL="<="
+    GREATER=">"
+    LESS="<"
+    EXCLAMATION="!"
+    TILDE="~"
+    DCOLON="::"
+    SEMICOLON=";"
+    PIPE="|"
+    PIPE_Z="|z"
+    PLUS="+"
+    MINUS="-"
+    AMPERSAND="&"
+    QUESTION="?"
+    DOLLAR="$"
+    FULLSTOP="."
+    DEG="°"
+    SUBSET_OR_EQUAL="regexp:[∈⊆]"
+    NOT_SUBSET_OR_EQUAL="⊈"
+    SUPERSET_OR_EQUAL="⊇"
+    NOT_SUPERSET_OR_EQUAL="⊉"
+    CROSSING="⧉"
+    PERCENT="%"
+  ]
+}
+rule         ::= selectors declarations | import;
+ruleset      ::= rule | ruleset rule;
+
+
+import       ::= AT "import" "url" "(" QUOTED ")" ID ";";
+
+selectors    ::= uSelectors | uSelectors ",";
+
+uSelectors   ::= selector | uSelectors "," selector;
+
+selector     ::= subselector | selector subselector;
+
+zoom         ::= PIPE "z" range | ;
+
+subselector  ::= object SPACE | object zoom | object zoom tests | maybeClass;
+
+
+range        ::= NUMBER | NUMBER "-" NUMBER | NUMBER "-" | "-" NUMBER;
+
+tests        ::= test | tests test;
+
+test         ::= "[" condition "]";
+
+condition    ::= tag binary value | unary tag | tag;
+
+tag          ::= key | tag ":" key;
+
+key          ::= ID;
+
+value        ::= ID | REGEX | NUMBER;
+
+binary       ::= "=" | "!=" | "=~" | "<" | ">" | "<=" | ">=";
+
+unary        ::= "-" | "!";
+
+maybeClass   ::= class | "!" class;
+
+class        ::= "." ID | ":" ID;
+
+object       ::= "node" | "way" | "relation" | "area" | "line" | "canvas" | "*" | ;
+
+declarations ::= declaration | declarations declaration;
+
+declaration  ::= "{" styleset "}" | "{" "}";
+
+styleset     ::= uStyleset | uStyleset ";" ;
+
+uStyleset    ::= style | uStyleset ";" style;
+
+style        ::= key ":" specifier;
+
+specifier    ::= named | sizes | colour | url | eval;
+
+named        ::= ID;
+
+sizes        ::= size | sizes "," size;
+
+size         ::= NUMBER units;
+
+colour       ::= HASHCOLOUR | "rgb" "(" NUMBER "," NUMBER "," NUMBER ")" | "rgba" "(" NUMBER "," NUMBER "," NUMBER "," NUMBER ")";
+
+url          ::= "url" "(" urlContent ")";
+
+urlContent   ::= QUOTED | eval;
+
+units        ::= "px" | "pt" | "%" | ;
+
+eval         ::= "eval" "(" QUOTED ")";
+
+private rule_recover ::= !('}')
