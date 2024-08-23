@@ -70,6 +70,7 @@
     block_comment="regexp:/\*(.|\n)*?\*/" // This is a "special" token
     STRING="regexp:(['\"]).*?[^\\]\1"
     IDENT="regexp:[a-zA-Z_]([a-zA-Z_0-9-])*"
+    REGEX="regexp:/.*?/"
   ]
 }
 
@@ -83,7 +84,7 @@ import2       ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 reco
 
 zoom         ::= PIPE "z" range
 
-selector  ::= object zoom? tests? maybeClazz?
+selector  ::= object zoom? tests? maybeClazz* layer?
 
 range        ::= UINT | UINT MINUS UINT | UINT MINUS | MINUS UINT
 
@@ -91,13 +92,15 @@ tests        ::= test+// | tests test
 
 test         ::= LSQUARE condition RSQUARE
 
-condition    ::= IDENT binary specifier | unary IDENT | IDENT
+inner condition    ::= IDENT binary (specifier | REGEX) | unary IDENT | IDENT | REGEX
 
 binary       ::= "=" | "!=" | "=~" | GREATER | LESS | GREATER_EQUAL | LESS_EQUAL
 
 unary        ::= MINUS | EXCLAMATION
 
 maybeClazz   ::= clazz | EXCLAMATION clazz
+
+layer        ::= COLON COLON IDENT
 
 clazz        ::= FULLSTOP IDENT | COLON IDENT
 
@@ -106,12 +109,12 @@ meta comma_separated_list ::= <<param>> ( COMMA <<param>> ) *
 meta semi_colon_separated_list ::= <<param>> ( SEMICOLON <<param>> )* SEMICOLON
 declarations ::= declaration
 
-declaration  ::= LBRACE styleset RBRACE //{pin=1 recoverWhile=rule_recover}
+declaration  ::= LBRACE styleset? RBRACE //{pin=1 recoverWhile=rule_recover}
 
 inner styleset     ::= <<semi_colon_separated_list style>>
 inner style        ::= IDENT COLON specifier {pin=2 recoverWhile=statement_recover}
 
-specifier    ::= IDENT | sizes | colour | url | eval | STRING | UINT | UFLOAT
+specifier    ::= sizes | colour | url | eval | STRING | UINT | UFLOAT | IDENT
 
 sizes        ::= <<comma_separated_list size>>
 
