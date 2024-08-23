@@ -29,5 +29,8 @@
                   fieldName="INSTANCE"
                   language="MapCSS"
                   extensions="mapcss"/>
+        <lang.parserDefinition language="MapCSS"
+                               implementationClass="org.openstreetmap.josm.idea.mapcss_intellij.MapCSSParserDefinition"
+                               />
     </extensions>
 </idea-plugin>

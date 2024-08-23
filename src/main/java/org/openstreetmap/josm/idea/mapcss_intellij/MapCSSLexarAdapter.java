@@ -7,10 +7,11 @@ import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.openstreetmap.josm.gui.mappaint.mapcss.parsergen.MapCSSParser;
+import org.openstreetmap.josm.idea.mapcss_intellij._MapCSSLexer;
 // SPDX-License-Identifier: GPL-2.0-or-later
 public class MapCSSLexarAdapter extends FlexAdapter {
     public MapCSSLexarAdapter() {
-        super(new MapCSSLexar(null));
+        super(new _MapCSSLexer());
     }
 
     @Override

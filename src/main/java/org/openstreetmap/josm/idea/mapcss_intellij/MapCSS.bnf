@@ -9,9 +9,9 @@
   psiPackage="org.openstreetmap.josm.idea.mapcss_intellij.psi"
   psiImplPackage="org.openstreetmap.josm.idea.mapcss_intellij.psi.impl"
 
-  elementTypeHolderClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.SimpleTypes"
-  elementTypeClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.SimpleElementType"
-  tokenTypeClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.SimpleTokenType"
+  elementTypeHolderClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.MapCSSTypes"
+  elementTypeClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.MapCSSElementType"
+  tokenTypeClass="org.openstreetmap.josm.idea.mapcss_intellij.psi.MapCSSTokenType"
   tokens=[
     PP_AND="and"
     PP_OR="or"
@@ -21,10 +21,11 @@
     PP_WHITESPACE="regexp:[ \t]"
     PP_COMMENT_START="/*"
     PP_COMMENT_END="*/"
+    BLOCK_COMMENT="regexp:/\*([\n\w*]*?)\*/"
     SET="set"
-    IDENT="regexp:[a-zA-Z_](a-zA-Z_-0-9)*"
+    IDENT="regexp:[a-zA-Z_]([a-zA-Z_0-9-])*"
     UINT="regexp:\d+"
-    STRING="regexp:\"([ !#-,-~\u0080-\uFFFF]|\\\"|\\\\)*\""
+    STRING="regexp:(['\"]).*?[^\\]\1"
     PREDEFINED="\\[dDsSwWbBAGZz]"
     //REGEX_CHAR_WITHOUT_STAR="regexp:[ -)+-.,0-[]-~\u0080-\uFFFF]|\\/|\\\\|\\[|\\]|\\+|\\.|\\'|\\\"|\\(|\\)|\\{|\\}|\\?|\\*|\\^|\\$|\\|\\p|PREDEFINED" // FIXME
     //REGEX="regexp:/" REGEX_CHAR_WITHOUT_STAR "(" REGEX_CHAR_WITHOUT_START "|*)*/" // FIXME
@@ -33,7 +34,7 @@
     LPAR="("
     RPAR=")"
     COMMA=","
-    COLOR=":"
+    COLON=":"
     UFLOAT="regexp:(\d)+(.\d+)?"
     HEXCOLOR="regexp:#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})"
     S="regexp:[ \t\n\r\f]+"
@@ -64,75 +65,86 @@
     NOT_SUPERSET_OR_EQUAL="⊉"
     CROSSING="⧉"
     PERCENT="%"
+    NODE="node"
+    WAY="way"
+    RELATION="relation"
+    META="meta"
+    AREA="area"
+    CANVAS="canvas"
+    LINE="line"
+    AT="@"
   ]
 }
-rule         ::= selectors declarations | import;
-ruleset      ::= rule | ruleset rule;
 
+root ::= root_item * {pin=1 recoverWhile=eof_recover}
 
-import       ::= AT "import" "url" "(" QUOTED ")" ID ";";
+private root_item ::= !<<eof>> (ruleset | comment+ | bcomment+) {pin=1 recoverWhile=rule_recover}
 
-selectors    ::= uSelectors | uSelectors ",";
+type ::= ruleset | comment | bcomment
+comment ::= PP_COMMENT_START PP_COMMENT_END {pin=1 recoverWhile=comment_end}
+bcomment ::= BLOCK_COMMENT {recoverWhile=comment_end}
 
-uSelectors   ::= selector | uSelectors "," selector;
+rule         ::= selector+ declarations* | import2;
+ruleset      ::= rule+;
 
-selector     ::= subselector | selector subselector;
+import2       ::= AT "import" PP_WHITESPACE+ "url" LPAR STRING RPAR PP_WHITESPACE+ IDENT SEMICOLON {pin=1 recoverWhile=statement_recover};
 
-zoom         ::= PIPE "z" range | ;
+selector     ::= subselector;
 
-subselector  ::= object SPACE | object zoom | object zoom tests | maybeClass;
+zoom         ::= PIPE "z" range;
 
+subselector  ::= (object SPACE | object zoom | object zoom tests | object tests | object maybeClazz | object) declaration;
 
-range        ::= NUMBER | NUMBER "-" NUMBER | NUMBER "-" | "-" NUMBER;
+range        ::= NUMBER | NUMBER MINUS NUMBER | NUMBER MINUS | MINUS NUMBER;
 
-tests        ::= test | tests test;
+tests        ::= test+;// | tests test;
 
-test         ::= "[" condition "]";
+test         ::= LSQUARE condition RSQUARE;
 
-condition    ::= tag binary value | unary tag | tag;
+condition    ::= key binary value | unary key | key;
 
-tag          ::= key | tag ":" key;
+tag          ::= key | key COLON value
+key          ::= IDENT;
 
-key          ::= ID;
+value        ::= IDENT | REGEX | NUMBER | STRING;
+binary       ::= "=" | "!=" | "=~" | GREATER | LESS | GREATER_EQUAL | LESS_EQUAL;
 
-value        ::= ID | REGEX | NUMBER;
+unary        ::= MINUS | EXCLAMATION;
 
-binary       ::= "=" | "!=" | "=~" | "<" | ">" | "<=" | ">=";
+maybeClazz   ::= clazz | EXCLAMATION clazz;
 
-unary        ::= "-" | "!";
+clazz        ::= FULLSTOP IDENT | COLON IDENT;
 
-maybeClass   ::= class | "!" class;
+object       ::= (NODE | WAY | RELATION | AREA | LINE | CANVAS | STAR | META) LBRACE <<semi_colon_separated_list tag>> RBRACE {pin = 1 recoverWhile=rule_recover}
+meta comma_separated_list ::= <<param>> ( COMMA <<param>> ) *
+meta semi_colon_separated_list ::= <<param>> ( SEMICOLON <<param>> )*
+declarations ::= declaration+;
 
-class        ::= "." ID | ":" ID;
+declaration  ::= LBRACE <<semi_colon_separated_list styleset>> RBRACE {pin=1 recoverWhile=rule_recover};
 
-object       ::= "node" | "way" | "relation" | "area" | "line" | "canvas" | "*" | ;
+styleset ::= style {recoverWhile=statement_recover};
 
-declarations ::= declaration | declarations declaration;
+style        ::= key COLON specifier {pin=2 recoverWhile=statement_recover};
 
-declaration  ::= "{" styleset "}" | "{" "}";
+specifier    ::= named | sizes | colour | url | eval | STRING;
 
-styleset     ::= uStyleset | uStyleset ";" ;
+named        ::= IDENT;
 
-uStyleset    ::= style | uStyleset ";" style;
-
-style        ::= key ":" specifier;
-
-specifier    ::= named | sizes | colour | url | eval;
-
-named        ::= ID;
-
-sizes        ::= size | sizes "," size;
+sizes        ::= size | (size COMMA)+ size;
 
 size         ::= NUMBER units;
 
-colour       ::= HASHCOLOUR | "rgb" "(" NUMBER "," NUMBER "," NUMBER ")" | "rgba" "(" NUMBER "," NUMBER "," NUMBER "," NUMBER ")";
+colour       ::= HASHCOLOUR | "rgb" LPAR NUMBER COMMA NUMBER COMMA NUMBER RPAR | "rgba" LPAR NUMBER COMMA NUMBER COMMA NUMBER COMMA NUMBER RPAR;
 
-url          ::= "url" "(" urlContent ")";
+url          ::= "url" LPAR urlContent RPAR;
 
 urlContent   ::= QUOTED | eval;
 
-units        ::= "px" | "pt" | "%" | ;
+units        ::= "px" | "pt" | PERCENT | ;
 
-eval         ::= "eval" "(" QUOTED ")";
+eval         ::= "eval" LPAR QUOTED RPAR;
 
-private rule_recover ::= !('}')
+private eof_recover ::= !(<<eof>>)
+private rule_recover ::= !(RBRACE)
+private statement_recover ::= !(SEMICOLON)
+private comment_end ::=!(PP_COMMENT_END)
