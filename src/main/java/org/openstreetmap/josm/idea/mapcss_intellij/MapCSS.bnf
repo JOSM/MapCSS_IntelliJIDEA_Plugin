@@ -17,23 +17,13 @@
     PP_OR="or"
     PP_NOT="not"
     PP_SUPPORTS="@supports"
-    PP_WHITESPACE="regexp:[ \t]"
     SET="set"
-    UINT="regexp:\d+"
-    STRING="regexp:(['\"]).*?[^\\]\1"
-    PREDEFINED="\\[dDsSwWbBAGZz]"
-    //REGEX_CHAR_WITHOUT_STAR="regexp:[ -)+-.,0-[]-~\u0080-\uFFFF]|\\/|\\\\|\\[|\\]|\\+|\\.|\\'|\\\"|\\(|\\)|\\{|\\}|\\?|\\*|\\^|\\$|\\|\\p|PREDEFINED" // FIXME
-    //REGEX="regexp:/" REGEX_CHAR_WITHOUT_STAR "(" REGEX_CHAR_WITHOUT_START "|*)*/" // FIXME
     LBRACE="{"
     RBRACE="}"
     LPAR="("
     RPAR=")"
     COMMA=","
     COLON=":"
-    UFLOAT="regexp:(\d)+(.\d+)?"
-    HEXCOLOR="regexp:#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})"
-    space="regexp:[ \t\n\r\f]+"
-    block_comment="regexp:/\*(.|\n)*?\*/" // This is a "special" token
     STAR="*"
     SLASH="/"
     LSQUARE="["
@@ -69,6 +59,16 @@
     CANVAS="canvas"
     LINE="line"
     AT="@"
+    // Tokens seem to be matched in order. Therefore regexes must be last..
+    PREDEFINED="\\[dDsSwWbBAGZz]"
+    //REGEX_CHAR_WITHOUT_STAR="regexp:[ -)+-.,0-[]-~\u0080-\uFFFF]|\\/|\\\\|\\[|\\]|\\+|\\.|\\'|\\\"|\\(|\\)|\\{|\\}|\\?|\\*|\\^|\\$|\\|\\p|PREDEFINED" // FIXME
+    //REGEX="regexp:/" REGEX_CHAR_WITHOUT_STAR "(" REGEX_CHAR_WITHOUT_START "|*)*/" // FIXME
+    UFLOAT="regexp:(\d)+(.\d+)?"
+    UINT="regexp:\d+"
+    HEXCOLOR="regexp:#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})"
+    space="regexp:[ \t\n\r\f]+" // This should not be used -- it is automatically used as a whitespace token.
+    block_comment="regexp:/\*(.|\n)*?\*/" // This is a "special" token
+    STRING="regexp:(['\"]).*?[^\\]\1"
     IDENT="regexp:[a-zA-Z_]([a-zA-Z_0-9-])*"
   ]
 }
