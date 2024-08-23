@@ -73,62 +73,60 @@
   ]
 }
 
-root ::= root_item * {pin=1 recoverWhile=eof_recover}
+root ::= root_item* {recoverWhile=eof_recover}
 
-private root_item ::= !<<eof>> (rule | import2) {pin=1 recoverWhile=rule_recover}
+private root_item ::= !<<eof>> (rule | import2)* {pin=1 recoverWhile=eof_recover}
 
-rule         ::= <<comma_separated_list selector>>;
+rule         ::= <<comma_separated_list selector>> declarations// {pin=1 recoverWhile=rule_recover}
 
-import2       ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 recoverWhile=statement_recover};
+import2       ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 recoverWhile=statement_recover}
 
-zoom         ::= PIPE "z" range;
+zoom         ::= PIPE "z" range
 
-selector  ::= (object | object zoom | object zoom tests | object tests | object maybeClazz) declarations {pin=1 recoverWhile=rule_recover};
+selector  ::= (object | object zoom | object zoom tests | object tests | object maybeClazz)
 
-range        ::= UINT | UINT MINUS UINT | UINT MINUS | MINUS UINT;
+range        ::= UINT | UINT MINUS UINT | UINT MINUS | MINUS UINT
 
-tests        ::= test+;// | tests test;
+tests        ::= test+// | tests test
 
-test         ::= LSQUARE condition RSQUARE;
+test         ::= LSQUARE condition RSQUARE
 
-condition    ::= key binary specifier | unary key | key;
+condition    ::= IDENT binary specifier | unary IDENT | IDENT
 
-key          ::= IDENT;
+binary       ::= "=" | "!=" | "=~" | GREATER | LESS | GREATER_EQUAL | LESS_EQUAL
 
-binary       ::= "=" | "!=" | "=~" | GREATER | LESS | GREATER_EQUAL | LESS_EQUAL;
+unary        ::= MINUS | EXCLAMATION
 
-unary        ::= MINUS | EXCLAMATION;
+maybeClazz   ::= clazz | EXCLAMATION clazz
 
-maybeClazz   ::= clazz | EXCLAMATION clazz;
-
-clazz        ::= FULLSTOP IDENT | COLON IDENT;
+clazz        ::= FULLSTOP IDENT | COLON IDENT
 
 object       ::= (NODE | WAY | RELATION | AREA | LINE | CANVAS | STAR | META)
 meta comma_separated_list ::= <<param>> ( COMMA <<param>> ) *
 meta semi_colon_separated_list ::= <<param>> ( SEMICOLON <<param>> )* SEMICOLON
-declarations ::= declaration+;
+declarations ::= declaration
 
-declaration  ::= LBRACE styleset RBRACE {pin=1 recoverWhile=rule_recover};
+declaration  ::= LBRACE styleset RBRACE //{pin=1 recoverWhile=rule_recover}
 
 inner styleset     ::= <<semi_colon_separated_list style>>
-inner style        ::= key COLON specifier {pin=2 recoverWhile=statement_recover};
+inner style        ::= IDENT COLON specifier {pin=2 recoverWhile=statement_recover}
 
-specifier    ::= IDENT | sizes | colour | url | eval | STRING | UINT | UFLOAT;
+specifier    ::= IDENT | sizes | colour | url | eval | STRING | UINT | UFLOAT
 
-sizes        ::= <<comma_separated_list size>>;
+sizes        ::= <<comma_separated_list size>>
 
-size         ::= UFLOAT units;
+size         ::= UFLOAT units
 
-colour       ::= HEXCOLOR | "rgb" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR | "rgba" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR;
+colour       ::= HEXCOLOR | "rgb" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR | "rgba" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR
 
-url          ::= "url" LPAR urlContent RPAR;
+url          ::= "url" LPAR urlContent RPAR
 
-urlContent   ::= QUOTED | eval;
+urlContent   ::= QUOTED | eval
 
-units        ::= "px" | "pt" | PERCENT | ;
+units        ::= "px" | "pt" | PERCENT |
 
-eval         ::= "eval" LPAR QUOTED RPAR;
+eval         ::= "eval" LPAR QUOTED RPAR
 
-private eof_recover ::= !(<<eof>>)
+private eof_recover ::= !(<<eof>> | RBRACE)
 private rule_recover ::= !(RBRACE)
 private statement_recover ::= !(SEMICOLON)
