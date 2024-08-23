@@ -17,13 +17,8 @@
     PP_OR="or"
     PP_NOT="not"
     PP_SUPPORTS="@supports"
-    PP_NEWLINECHAR="regexp:[\n\r\f]"
     PP_WHITESPACE="regexp:[ \t]"
-    PP_COMMENT_START="/*"
-    PP_COMMENT_END="*/"
-    BLOCK_COMMENT="regexp:/\*([\n\w*]*?)\*/"
     SET="set"
-    IDENT="regexp:[a-zA-Z_]([a-zA-Z_0-9-])*"
     UINT="regexp:\d+"
     STRING="regexp:(['\"]).*?[^\\]\1"
     PREDEFINED="\\[dDsSwWbBAGZz]"
@@ -37,7 +32,8 @@
     COLON=":"
     UFLOAT="regexp:(\d)+(.\d+)?"
     HEXCOLOR="regexp:#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})"
-    S="regexp:[ \t\n\r\f]+"
+    space="regexp:[ \t\n\r\f]+"
+    block_comment="regexp:/\*(.|\n)*?\*/" // This is a "special" token
     STAR="*"
     SLASH="/"
     LSQUARE="["
@@ -73,40 +69,32 @@
     CANVAS="canvas"
     LINE="line"
     AT="@"
+    IDENT="regexp:[a-zA-Z_]([a-zA-Z_0-9-])*"
   ]
 }
 
 root ::= root_item * {pin=1 recoverWhile=eof_recover}
 
-private root_item ::= !<<eof>> (ruleset | comment+ | bcomment+) {pin=1 recoverWhile=rule_recover}
+private root_item ::= !<<eof>> (rule | import2) {pin=1 recoverWhile=rule_recover}
 
-type ::= ruleset | comment | bcomment
-comment ::= PP_COMMENT_START PP_COMMENT_END {pin=1 recoverWhile=comment_end}
-bcomment ::= BLOCK_COMMENT {recoverWhile=comment_end}
+rule         ::= <<comma_separated_list selector>>;
 
-rule         ::= selector+ declarations* | import2;
-ruleset      ::= rule+;
-
-import2       ::= AT "import" PP_WHITESPACE+ "url" LPAR STRING RPAR PP_WHITESPACE+ IDENT SEMICOLON {pin=1 recoverWhile=statement_recover};
-
-selector     ::= subselector;
+import2       ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 recoverWhile=statement_recover};
 
 zoom         ::= PIPE "z" range;
 
-subselector  ::= (object SPACE | object zoom | object zoom tests | object tests | object maybeClazz | object) declaration;
+selector  ::= (object | object zoom | object zoom tests | object tests | object maybeClazz) declarations {pin=1 recoverWhile=rule_recover};
 
-range        ::= NUMBER | NUMBER MINUS NUMBER | NUMBER MINUS | MINUS NUMBER;
+range        ::= UINT | UINT MINUS UINT | UINT MINUS | MINUS UINT;
 
 tests        ::= test+;// | tests test;
 
 test         ::= LSQUARE condition RSQUARE;
 
-condition    ::= key binary value | unary key | key;
+condition    ::= key binary specifier | unary key | key;
 
-tag          ::= key | key COLON value
 key          ::= IDENT;
 
-value        ::= IDENT | REGEX | NUMBER | STRING;
 binary       ::= "=" | "!=" | "=~" | GREATER | LESS | GREATER_EQUAL | LESS_EQUAL;
 
 unary        ::= MINUS | EXCLAMATION;
@@ -115,26 +103,23 @@ maybeClazz   ::= clazz | EXCLAMATION clazz;
 
 clazz        ::= FULLSTOP IDENT | COLON IDENT;
 
-object       ::= (NODE | WAY | RELATION | AREA | LINE | CANVAS | STAR | META) LBRACE <<semi_colon_separated_list tag>> RBRACE {pin = 1 recoverWhile=rule_recover}
+object       ::= (NODE | WAY | RELATION | AREA | LINE | CANVAS | STAR | META)
 meta comma_separated_list ::= <<param>> ( COMMA <<param>> ) *
-meta semi_colon_separated_list ::= <<param>> ( SEMICOLON <<param>> )*
+meta semi_colon_separated_list ::= <<param>> ( SEMICOLON <<param>> )* SEMICOLON
 declarations ::= declaration+;
 
-declaration  ::= LBRACE <<semi_colon_separated_list styleset>> RBRACE {pin=1 recoverWhile=rule_recover};
+declaration  ::= LBRACE styleset RBRACE {pin=1 recoverWhile=rule_recover};
 
-styleset ::= style {recoverWhile=statement_recover};
+inner styleset     ::= <<semi_colon_separated_list style>>
+inner style        ::= key COLON specifier {pin=2 recoverWhile=statement_recover};
 
-style        ::= key COLON specifier {pin=2 recoverWhile=statement_recover};
+specifier    ::= IDENT | sizes | colour | url | eval | STRING | UINT | UFLOAT;
 
-specifier    ::= named | sizes | colour | url | eval | STRING;
+sizes        ::= <<comma_separated_list size>>;
 
-named        ::= IDENT;
+size         ::= UFLOAT units;
 
-sizes        ::= size | (size COMMA)+ size;
-
-size         ::= NUMBER units;
-
-colour       ::= HASHCOLOUR | "rgb" LPAR NUMBER COMMA NUMBER COMMA NUMBER RPAR | "rgba" LPAR NUMBER COMMA NUMBER COMMA NUMBER COMMA NUMBER RPAR;
+colour       ::= HEXCOLOR | "rgb" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR | "rgba" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR;
 
 url          ::= "url" LPAR urlContent RPAR;
 
@@ -147,4 +132,3 @@ eval         ::= "eval" LPAR QUOTED RPAR;
 private eof_recover ::= !(<<eof>>)
 private rule_recover ::= !(RBRACE)
 private statement_recover ::= !(SEMICOLON)
-private comment_end ::=!(PP_COMMENT_END)
