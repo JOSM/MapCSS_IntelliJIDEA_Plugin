@@ -64,8 +64,7 @@
     PREDEFINED="\\[dDsSwWbBAGZz]"
     //REGEX_CHAR_WITHOUT_STAR="regexp:[ -)+-.,0-[]-~\u0080-\uFFFF]|\\/|\\\\|\\[|\\]|\\+|\\.|\\'|\\\"|\\(|\\)|\\{|\\}|\\?|\\*|\\^|\\$|\\|\\p|PREDEFINED" // FIXME
     //REGEX="regexp:/" REGEX_CHAR_WITHOUT_STAR "(" REGEX_CHAR_WITHOUT_START "|*)*/" // FIXME
-    UINT="regexp:\d+(?!\.)"
-    UFLOAT="regexp:(\d)+(\.\d+)?"
+    UINT="regexp:\d+"
     HEXCOLOR="regexp:#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})"
     space="regexp:[ \t\n\r\f]+" // This should not be used -- it is automatically used as a whitespace token.
     block_comment="regexp:/\*(.|\n)*?\*/" // This is a "special" token
@@ -118,5 +117,6 @@ private plus_minus          ::= MINUS | PLUS
 inner function              ::= <<tfunction function>>
 private meta tfunction      ::= (IDENT | SETTING) LPAR <<comma_separated_list (STRING | <<param>> | IDENT | number)>> RPAR
 private number              ::= UFLOAT | UINT
+UFLOAT                      ::= UINT FULLSTOP UINT
 private eof_recover         ::= !(<<eof>> | RBRACE)
 private statement_recover   ::= !(SEMICOLON)
