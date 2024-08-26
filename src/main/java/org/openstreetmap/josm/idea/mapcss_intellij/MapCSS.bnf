@@ -67,7 +67,7 @@
     UINT="regexp:\d+"
     HEXCOLOR="regexp:#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})"
     space="regexp:[ \t\n\r\f]+" // This should not be used -- it is automatically used as a whitespace token.
-    block_comment="regexp:/\*(.|\n|\r)*?\*/" // This is a "special" token
+    block_comment="regexp:/\*[\s\S]*?\*/" // This is a "special" token
     STRING="regexp:(['\"]).*?[^\\]\1"
     IDENT="regexp:[a-zA-Z_]([a-zA-Z_0-9-])*"
     REGEX="regexp:/.*?[^\\]/"

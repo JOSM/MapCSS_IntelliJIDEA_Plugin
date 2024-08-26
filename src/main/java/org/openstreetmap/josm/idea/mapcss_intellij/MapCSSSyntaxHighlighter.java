@@ -23,12 +23,17 @@ public class MapCSSSyntaxHighlighter extends SyntaxHighlighterBase {
     static final TextAttributesKey CANVAS = createTextAttributesKey("MAPCSS_CANVAS", DefaultLanguageHighlighterColors.KEYWORD);
     static final TextAttributesKey FUNCTION = createTextAttributesKey("MAPCSS_FUNCTION", DefaultLanguageHighlighterColors.FUNCTION_CALL);
 
+    // FIXME: This is also an arithmetic expression, so it should only be highlighted as a keyword when it is part of a rule instead of a condition.
+    static final TextAttributesKey STAR = createTextAttributesKey("MAPCSS_STAR", DefaultLanguageHighlighterColors.KEYWORD);
+
+    static final TextAttributesKey RULE = createTextAttributesKey("MAPCSS_RULE", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
     private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[] {COMMENT};
-    private static final TextAttributesKey[] KEYWORD_KEYS = new TextAttributesKey[] {META, NODE, WAY, LINE, AREA, RELATION, CANVAS};
+    private static final TextAttributesKey[] KEYWORD_KEYS = new TextAttributesKey[] {META, NODE, WAY, LINE, AREA, RELATION, CANVAS, STAR};
     private static final TextAttributesKey[] VALUE_KEYS = new TextAttributesKey[] {STRING};
     private static final TextAttributesKey[] FUNCTION_KEYS = new TextAttributesKey[] {FUNCTION};
+    private static final TextAttributesKey[] RULE_KEYS = new TextAttributesKey[] {RULE};
     @Override
     public @NotNull Lexer getHighlightingLexer() {
         return new MapCSSLexarAdapter();
@@ -42,10 +47,13 @@ public class MapCSSSyntaxHighlighter extends SyntaxHighlighterBase {
             return VALUE_KEYS;
         } else if (MapCSSTypes.META.equals(tokenType) || MapCSSTypes.NODE.equals(tokenType)
                 || MapCSSTypes.WAY.equals(tokenType) || MapCSSTypes.LINE.equals(tokenType) || MapCSSTypes.AREA.equals(tokenType)
-                || MapCSSTypes.RELATION.equals(tokenType) || MapCSSTypes.CANVAS.equals(tokenType)) {
+                || MapCSSTypes.RELATION.equals(tokenType) || MapCSSTypes.CANVAS.equals(tokenType)
+                || MapCSSTypes.STAR.equals(tokenType)) {
             return KEYWORD_KEYS;
         } else if (MapCSSTypes.FUNCTION.equals(tokenType)) {
             return FUNCTION_KEYS;
+        } else if (MapCSSTypes.RULE.equals(tokenType)) {
+            return RULE_KEYS;
         }
         return EMPTY_KEYS;
     }
