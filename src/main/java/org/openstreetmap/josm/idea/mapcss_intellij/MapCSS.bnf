@@ -87,7 +87,7 @@ range               ::= UINT MINUS UINT | UINT MINUS | MINUS UINT | UINT
 tests               ::= test+// | tests test
 test                ::= LSQUARE condition RSQUARE
 inner condition     ::= key_function binary (specifier | REGEX) | unary? key_function falsy? | REGEX
-private key         ::= STRING | ((IDENT | AREA) (COLON IDENT)?)
+private key         ::= STRING | (allowable_ident (COLON allowable_ident)?)
 private key_function ::= function | key
 private falsy       ::= QUESTION EXCLAMATION?
 binary              ::= "=" | "!=" | "=~" | "~="| GREATER | LESS | GREATER_EQUAL | LESS_EQUAL
@@ -104,7 +104,9 @@ inner styleset              ::= <<semi_colon_separated_list style>>
 inner style                 ::= set_ident | key_value
 private set_ident           ::= SET IDENT //{pin=1 recoverWhile=statement_recover}
 private key_value           ::= IDENT COLON specifier // {pin=2 recoverWhile=statement_recover}
-specifier                   ::= function | sizes | IDENT? colour | url | eval | (STRING | LINE) | IDENT
+specifier                   ::= function | sizes | IDENT? colour | url | eval | STRING | allowable_ident
+// This is needed since these are all allowable identifiers in some locations.
+private allowable_ident     ::= (IDENT | NODE | WAY | LINE | AREA | RELATION | CANVAS | META)
 sizes                       ::= <<comma_separated_list size>>
 size                        ::= equation units
 colour                      ::= HEXCOLOR | "rgb" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR | "rgba" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR
