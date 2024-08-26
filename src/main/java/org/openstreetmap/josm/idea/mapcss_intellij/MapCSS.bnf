@@ -84,7 +84,7 @@ import2       ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 reco
 
 zoom         ::= PIPE "z" range
 
-selector  ::= object zoom? tests? maybeClazzes* layer?
+selector  ::= object zoom? tests? maybeClazzes* layer? (GREATER object zoom? tests? maybeClazzes* layer?)?
 
 range        ::= UINT | UINT MINUS UINT | UINT MINUS | MINUS UINT
 
