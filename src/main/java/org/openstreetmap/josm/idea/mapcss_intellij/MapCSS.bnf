@@ -81,7 +81,7 @@ rule                ::= <<comma_separated_list selector>> declarations // {pin=1
 import2             ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 recoverWhile=statement_recover}
 zoom                ::= PIPE_Z range
 selector            ::= link_selector | sub_selector (GREATER sub_selector)?
-link_selector       ::= sub_selector GREATER LSQUARE 'role=' specifier RSQUARE object?
+link_selector       ::= sub_selector GREATER LSQUARE ('role=' | 'index=') specifier RSQUARE sub_selector
 sub_selector        ::= object zoom? maybeClazzes* tests? maybeClazzes* layer?
 range               ::= UINT MINUS UINT | UINT MINUS | MINUS UINT | UINT
 tests               ::= test+// | tests test
@@ -90,7 +90,7 @@ inner condition     ::= key_function binary (specifier | REGEX) | unary? key_fun
 private key         ::= STRING | (allowable_ident (COLON allowable_ident)?)
 private key_function ::= function | key
 private falsy       ::= QUESTION EXCLAMATION?
-binary              ::= "=" | "!=" | "=~" | "~="| GREATER | LESS | GREATER_EQUAL | LESS_EQUAL
+binary              ::= "=" | "!=" | "=~" | "~="| "=*" | "!~" | GREATER | LESS | GREATER_EQUAL | LESS_EQUAL
 unary               ::= MINUS | EXCLAMATION
 maybeClazzes        ::= (clazz | EXCLAMATION clazz)+
 layer               ::= DCOLON IDENT
