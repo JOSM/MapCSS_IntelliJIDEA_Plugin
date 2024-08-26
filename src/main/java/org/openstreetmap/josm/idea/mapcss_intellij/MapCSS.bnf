@@ -23,7 +23,6 @@
     LPAR="("
     RPAR=")"
     COMMA=","
-    COLON=":"
     STAR="*"
     SLASH="/"
     LSQUARE="["
@@ -35,6 +34,7 @@
     EXCLAMATION="!"
     TILDE="~"
     DCOLON="::"
+    COLON=":"
     SEMICOLON=";"
     PIPE="|"
     PIPE_Z="|z"
@@ -84,7 +84,7 @@ import2       ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 reco
 
 zoom         ::= PIPE "z" range
 
-selector  ::= object zoom? tests? maybeClazz* layer?
+selector  ::= object zoom? tests? maybeClazzes* layer?
 
 range        ::= UINT | UINT MINUS UINT | UINT MINUS | MINUS UINT
 
@@ -98,9 +98,9 @@ binary       ::= "=" | "!=" | "=~" | GREATER | LESS | GREATER_EQUAL | LESS_EQUAL
 
 unary        ::= MINUS | EXCLAMATION
 
-maybeClazz   ::= clazz | EXCLAMATION clazz
+maybeClazzes   ::= (clazz | EXCLAMATION clazz)+
 
-layer        ::= COLON COLON IDENT
+layer        ::= DCOLON IDENT
 
 clazz        ::= FULLSTOP IDENT | COLON IDENT
 
