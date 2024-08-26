@@ -29,8 +29,9 @@ SUBSET_OR_EQUAL=[∈⊆]
 UINT=[0-9]+
 HEXCOLOR=#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})
 SPACE=[ \t\n\r\f]+
+// This is important -- do NOT overwrite if regenerating Lexer.
 BLOCK_COMMENT="/*" !([^]* "*/" [^]*) ("*/")
-STRING=(['\"]).*?[^\\]\1
+STRING=\".*?[^\\]\"
 IDENT=[a-zA-Z_]([a-zA-Z_0-9-])*
 REGEX="/".*?[^\\]"/"
 
