@@ -58,78 +58,65 @@
     AREA="area"
     CANVAS="canvas"
     LINE="line"
+    SETTING="setting"
     AT="@"
     // Tokens seem to be matched in order. Therefore regexes must be last..
     PREDEFINED="\\[dDsSwWbBAGZz]"
     //REGEX_CHAR_WITHOUT_STAR="regexp:[ -)+-.,0-[]-~\u0080-\uFFFF]|\\/|\\\\|\\[|\\]|\\+|\\.|\\'|\\\"|\\(|\\)|\\{|\\}|\\?|\\*|\\^|\\$|\\|\\p|PREDEFINED" // FIXME
     //REGEX="regexp:/" REGEX_CHAR_WITHOUT_STAR "(" REGEX_CHAR_WITHOUT_START "|*)*/" // FIXME
-    UFLOAT="regexp:(\d)+(.\d+)?"
-    UINT="regexp:\d+"
+    UINT="regexp:\d+(?!\.)"
+    UFLOAT="regexp:(\d)+(\.\d+)?"
     HEXCOLOR="regexp:#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})"
     space="regexp:[ \t\n\r\f]+" // This should not be used -- it is automatically used as a whitespace token.
     block_comment="regexp:/\*(.|\n)*?\*/" // This is a "special" token
     STRING="regexp:(['\"]).*?[^\\]\1"
     IDENT="regexp:[a-zA-Z_]([a-zA-Z_0-9-])*"
-    REGEX="regexp:/.*?/"
+    REGEX="regexp:/.*?[^\\]/"
   ]
 }
 
 root ::= root_item* {recoverWhile=eof_recover}
-
-private root_item ::= !<<eof>> (rule | import2)* {pin=1 recoverWhile=eof_recover}
-
-rule         ::= <<comma_separated_list selector>> declarations // {pin=1 recoverWhile=rule_recover}
-
-import2       ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 recoverWhile=statement_recover}
-
-zoom         ::= PIPE "z" range
-
-selector  ::= object zoom? tests? maybeClazzes* layer? (GREATER object zoom? tests? maybeClazzes* layer?)?
-
-range        ::= UINT | UINT MINUS UINT | UINT MINUS | MINUS UINT
-
-tests        ::= test+// | tests test
-
-test         ::= LSQUARE condition RSQUARE
-
-inner condition    ::= IDENT binary (specifier | REGEX) | unary IDENT | IDENT | REGEX
-
-binary       ::= "=" | "!=" | "=~" | GREATER | LESS | GREATER_EQUAL | LESS_EQUAL
-
-unary        ::= MINUS | EXCLAMATION
-
-maybeClazzes   ::= (clazz | EXCLAMATION clazz)+
-
-layer        ::= DCOLON IDENT
-
-clazz        ::= FULLSTOP IDENT | COLON IDENT
-
-object       ::= (NODE | WAY | RELATION | AREA | LINE | CANVAS | STAR | META)
-meta comma_separated_list ::= <<param>> ( COMMA <<param>> ) *
+private root_item   ::= !<<eof>> (css_setting | rule | import2)* {pin=1 recoverWhile=eof_recover}
+css_setting         ::= SETTING DCOLON IDENT declarations
+rule                ::= <<comma_separated_list selector>> declarations // {pin=1 recoverWhile=rule_recover}
+import2             ::= AT "import" "url" LPAR STRING RPAR IDENT SEMICOLON {pin=1 recoverWhile=statement_recover}
+zoom                ::= PIPE_Z range
+selector            ::= link_selector | sub_selector (GREATER sub_selector)?
+link_selector       ::= sub_selector GREATER LSQUARE 'role=' specifier RSQUARE object?
+sub_selector        ::= object zoom? maybeClazzes* tests? maybeClazzes* layer?
+range               ::= UINT MINUS UINT | UINT MINUS | MINUS UINT | UINT
+tests               ::= test+// | tests test
+test                ::= LSQUARE condition RSQUARE
+inner condition     ::= key_function binary (specifier | REGEX) | unary? key_function falsy? | REGEX
+private key         ::= STRING | ((IDENT | AREA) (COLON IDENT)?)
+private key_function ::= function | key
+private falsy       ::= QUESTION EXCLAMATION?
+binary              ::= "=" | "!=" | "=~" | "~="| GREATER | LESS | GREATER_EQUAL | LESS_EQUAL
+unary               ::= MINUS | EXCLAMATION
+maybeClazzes        ::= (clazz | EXCLAMATION clazz)+
+layer               ::= DCOLON IDENT
+clazz               ::= FULLSTOP IDENT | COLON IDENT
+object              ::= (NODE | WAY | RELATION | AREA | LINE | CANVAS | STAR | META)
+meta comma_separated_list   ::= <<param>> ( COMMA <<param>> ) *
 meta semi_colon_separated_list ::= <<param>> ( SEMICOLON <<param>> )* SEMICOLON
-declarations ::= declaration
-
-declaration  ::= LBRACE styleset? RBRACE //{pin=1 recoverWhile=rule_recover}
-
-inner styleset     ::= <<semi_colon_separated_list style>>
-inner style        ::= IDENT COLON specifier {pin=2 recoverWhile=statement_recover}
-
-specifier    ::= sizes | colour | url | eval | STRING | UINT | UFLOAT | IDENT
-
-sizes        ::= <<comma_separated_list size>>
-
-size         ::= UFLOAT units
-
-colour       ::= HEXCOLOR | "rgb" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR | "rgba" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR
-
-url          ::= "url" LPAR urlContent RPAR
-
-urlContent   ::= QUOTED | eval
-
-units        ::= "px" | "pt" | PERCENT |
-
-eval         ::= "eval" LPAR QUOTED RPAR
-
-private eof_recover ::= !(<<eof>> | RBRACE)
-private rule_recover ::= !(RBRACE)
-private statement_recover ::= !(SEMICOLON)
+declarations                ::= declaration
+declaration                 ::= LBRACE styleset? RBRACE //{pin=1 recoverWhile=rule_recover}
+inner styleset              ::= <<semi_colon_separated_list style>>
+inner style                 ::= set_ident | key_value
+private set_ident           ::= SET IDENT //{pin=1 recoverWhile=statement_recover}
+private key_value           ::= IDENT COLON specifier // {pin=2 recoverWhile=statement_recover}
+specifier                   ::= function | sizes | IDENT? colour | url | eval | (STRING | LINE) | IDENT
+sizes                       ::= <<comma_separated_list size>>
+size                        ::= equation units
+colour                      ::= HEXCOLOR | "rgb" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR | "rgba" LPAR UFLOAT COMMA UFLOAT COMMA UFLOAT COMMA UFLOAT RPAR
+url                         ::= "url" LPAR urlContent RPAR
+urlContent                  ::= QUOTED | eval
+units                       ::= "px" | "pt" | PERCENT |
+eval                        ::= "eval" LPAR QUOTED RPAR
+equation                    ::= LPAR? (number | function | LPAR | RPAR | SLASH | STAR | plus_minus)+ RPAR?
+private plus_minus          ::= MINUS | PLUS
+inner function              ::= <<tfunction function>>
+private meta tfunction      ::= (IDENT | SETTING) LPAR <<comma_separated_list (STRING | <<param>> | IDENT | number)>> RPAR
+private number              ::= UFLOAT | UINT
+private eof_recover         ::= !(<<eof>> | RBRACE)
+private statement_recover   ::= !(SEMICOLON)
