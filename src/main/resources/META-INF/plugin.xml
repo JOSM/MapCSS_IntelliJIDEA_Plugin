@@ -32,5 +32,8 @@
         <lang.parserDefinition language="MapCSS"
                                implementationClass="org.openstreetmap.josm.idea.mapcss_intellij.MapCSSParserDefinition"
                                />
+        <lang.syntaxHighlighterFactory language="MapCSS"
+                                       implementationClass="org.openstreetmap.josm.idea.mapcss_intellij.MapCSSSyntaxHighlighterFactory" />
+        <colorSettingsPage implementation="org.openstreetmap.josm.idea.mapcss_intellij.MapCSSColorSettingsPage"/>
     </extensions>
 </idea-plugin>
