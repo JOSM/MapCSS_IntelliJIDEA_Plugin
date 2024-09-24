@@ -1,0 +1,18 @@
+/** This is a test file. Rules in it may be nonsensical for production use. */
+meta {
+    title: "Test MapCSS";
+}
+/** This is a multi-line comment
+  * just to ensure that it ends where it should
+  */
+*[node=way] {
+    text: tr("Check that node=way is detected as a test");
+}
+
+node[highway=crossing]::layer_1 {
+}
+
+way[highway=residential],
+way[highway=secondary] {
+    casing-color: highway#000000;
+}
